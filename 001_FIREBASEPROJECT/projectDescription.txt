@@ -1,0 +1,21 @@
+-> Admin
+
+        -> login 
+        -> dashboard 
+            ->  can view all users 
+            ->  can manage all users (edit , delete )
+            ->  can view all post  (specific user profile picture and uploaded by user name )
+            ->  can view specific user wise post 
+            ->  can manage all post (delete)
+            ->  can delete own account
+            ->  logout
+-> User 
+
+        -> register 
+        -> login 
+        -> dashboard 
+            -> can view all post - if there is no post display in center - NO POST FOUND 
+            -> appbar - display profile image , profile change ,Bio profile (edit-update) , account delete , logout
+            -> my post - (edit , delete )
+
+            

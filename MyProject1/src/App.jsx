@@ -1,13 +1,20 @@
 import React from 'react'
-import Example1 from './MyComponents/Example1'
-import Example2 from './MyComponents/Example2'
+import { BrowserRouter } from 'react-router-dom'
+import Router from './PROJECT/MyFireBaseProject/Router'
+import ProjectRouter from './PROJECT/MyFireBaseProject/AdminUserLogin/ProjectRouter'
+import Redux_Router from './11Redux/Redux_Router'
+import AllHooks from './Hooks/AllHooks'
+import Ex1 from './ReusableComponent/Ex1'
 
 export default function App() {
-
   return (
     <div>
-      <Example1/>
-      {/* <Example2/> */}
+     {/* <Router/> */}
+     {/* <ProjectRouter/> */}
+
+     {/* <Redux_Router/> */}
+     {/* <AllHooks/> */}
+     <Ex1/>
     </div>
   )
 }

@@ -1,0 +1,29 @@
+1) random pic name from the array and display on div on button click 
+
+2) take two button 1st for + and 2nd for minus  
+
+    on + button click increase size of font and on - minus button decrease size of font 
+
+3) take one button and display one image bulb on 
+
+    when we click on bulb on - it will display bulb on image when we click on bulb off - it will display bulb off image 
+
+
+        Bulb On 
+
+4)  Change button background color and text color random on button click event 
+
+5) factorial 
+
+6) days into month 
+
+7) month into days 
+
+8) years into days and month 
+
+9) Accept fruit data from user and display list with proper css 
+
+10) accept value from user store in list and convert in reverse order and display in h1 
+
+11) accept name, subject and city , email , gender ,from user and and display in card view using of props   (concepts cover : useState, props , conditional rendering )
+    as per gender - display different logo 
