@@ -18,7 +18,7 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth, storage, db } from '../../../firebaseConfig';
 import { collection, deleteDoc, doc, getDoc, updateDoc, getDocs, setDoc } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
-import { Card, CardActions, CardContent, CardMedia, CircularProgress, Paper, TextField } from '@mui/material';
+import { Card, CardActions, CardContent, CardMedia, CircularProgress, Paper, TextField,Divider } from '@mui/material';
 
 const settings = ['Profile', 'Account', 'Dashboard', 'Logout'];
 
@@ -34,8 +34,11 @@ function ResponsiveAppBar() {
     const [content, setContent] = useState('');
     const [image, setImage] = useState(null);
     const [post, setPost] = useState([]);
-    const [postUsers,setPostUsers] = useState(null);
+    const [postUsers, setPostUsers] = useState(null);
     const [mypost, setMypost] = useState(false);
+    const [viewallPost, setViewAllpost] = useState(false);
+    const[newComment, setNewComment] = useState();
+
 
     const navigate = useNavigate();
 
@@ -112,6 +115,10 @@ function ResponsiveAppBar() {
         setMypost(!mypost);
     };
 
+    const handleallPost = () => {
+        setViewAllpost(!viewallPost);
+    };
+
     const handlePost = async (e) => {
         e.preventDefault();
         const user = auth.currentUser;
@@ -119,7 +126,7 @@ function ResponsiveAppBar() {
         const storageRef = await ref(storage, `Post/${user.uid}/${Date.now()}`);
         await uploadBytes(storageRef, image);
         const downloadUrl = await getDownloadURL(storageRef);
-        
+
 
         await setDoc(doc(db, "Post", `${Date.now()}`), {
             title: title,
@@ -127,7 +134,7 @@ function ResponsiveAppBar() {
             image: downloadUrl,
             userid: user.uid
         });
-         navigate("/viewpost")
+        navigate("/viewpost")
         fetchPostFun();
     };
 
@@ -142,7 +149,7 @@ function ResponsiveAppBar() {
             users[doc.id] = record.name;
 
         });
-        console.log("users : ",users);
+        console.log("users : ", users);
 
         setPostUsers(users);
     };
@@ -167,12 +174,78 @@ function ResponsiveAppBar() {
         });
         setPost(fetchPost);
     };
-    const handleDelete=async(docid)=>{
-        console.log("---> delete ",docid);
-        await deleteDoc(doc(db,"Post",docid));
+    const timeAgo = (timestamp) => {
+        const now = Date.now();
+        const seconds = Math.floor((now - timestamp) / 1000);
+
+        let interval = Math.floor(seconds / 31536000);
+        if (interval > 1) {
+            return `${interval} years ago`;
+        }
+        interval = Math.floor(seconds / 2592000);
+        if (interval > 1) {
+            return `${interval} months ago`;
+        }
+        interval = Math.floor(seconds / 86400);
+        if (interval > 1) {
+            return `${interval} days ago`;
+        }
+        interval = Math.floor(seconds / 3600);
+        if (interval > 1) {
+            return `${interval} hours ago`;
+        }
+        interval = Math.floor(seconds / 60);
+        if (interval > 1) {
+            return `${interval} minutes ago`;
+        }
+        return `${Math.floor(seconds)} seconds ago`;
+    }
+    const handleDelete = async (docid) => {
+        console.log("---> delete ", docid);
+        await deleteDoc(doc(db, "Post", docid));
         setPost(post.filter(item => item.id !== docid))
-        
+
         // navigate("/dashboard",{replace:true})
+    }
+    const handleLike = async (postid) => {
+        const specific_post = await getDoc(doc(db, "Post", postid));
+
+        const postDataLikeList = await specific_post.data().likes || [];
+
+        console.log("====>postdata", postDataLikeList);
+
+        const user = auth.currentUser;
+        if (postDataLikeList.includes(user.uid)) return;
+
+        console.log("-->adding 1 Like");
+
+        await updateDoc(doc(db, "Post", postid), {
+            "likes": [...postDataLikeList, user.uid]
+        })
+
+        const updatePost = await post.map((post) => post.id === postid ? { ...post, 'likes': [...post.likes, user.uid] } : post)
+
+        setPost(updatePost);
+    }
+    const handleComment=async(postid)=>{
+        const user=auth.currentUser;
+        console.log("----->postid",postid);
+
+        const newCommentObj={
+            text : newComment,
+            userid : user.uid,
+            timestamp : Date.now()
+        }
+
+        await updateDoc(doc(db,"Post",postid),{
+            "comments": arrayUnion(newCommentObj)
+        })
+
+        setNewComment("")
+        const updateCommentPost=await post.map((post)=>post.id===postid?{...post,"comments":[...post,comments,newCommentObj]}:post)
+
+        setPost(updateCommentPost)
+         console.log("--->>NEWPOST:" , post);
     }
 
     return (
@@ -207,7 +280,7 @@ function ResponsiveAppBar() {
                             <Typography textAlign="center">View My Post</Typography>
                         </MenuItem>
                         <MenuItem>
-                            <Typography textAlign="center">View All Post</Typography>
+                            <Typography textAlign="center" onClick={handleallPost}>View All Post</Typography>
                         </MenuItem>
                         <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
                             <IconButton
@@ -387,7 +460,7 @@ function ResponsiveAppBar() {
                                     />
                                 </Button> <br />
                                 {image && <Typography variant="body2">{image.name}</Typography>}
-                                <Button onClick={(e)=>handlePost(e)}
+                                <Button onClick={(e) => handlePost(e)}
                                     type="button"
                                     variant="contained"
                                     color="primary"
@@ -409,23 +482,8 @@ function ResponsiveAppBar() {
 
             {/* ===================MYPOST================     */}
 
-            {/* {mypost ?
-               <Paper className='mypost'>
-                    {post.map((singlePost, index) => {
-                        return <div key={index}>
-                            <h4>{singlePost.title}</h4>
-                            <h3>{singlePost.userid}</h3>
-                            <h4>posted by : {postUsers[singlePost.userid]}</h4>
-                            <p>{singlePost.description}</p>
-                            <img src={singlePost.image} height={50} width={50} />
-                            <button onClick={() => handleDelete(singlePost.id)}>Delete</button>
-                            <hr></hr>
-                        </div>
-                          })}
-                </Paper>
-                : <h1></h1>
-            } */}
-              {mypost ? (
+
+            {mypost ? (
                 <Paper className='mypost'>
                     {post.map((singlePost, index) => (
                         <Card key={index} variant="outlined" sx={{ mb: 2 }}>
@@ -433,7 +491,7 @@ function ResponsiveAppBar() {
                                 <Typography variant="h6">{singlePost.title}</Typography>
                                 <Typography variant="subtitle1">posted by: {postUsers[singlePost.userid]}</Typography>
                                 <Typography variant="body2">{singlePost.description}</Typography>
-                                <CardMedia 
+                                <CardMedia
                                     component="img"
                                     height="140"
                                     image={singlePost.image}
@@ -450,6 +508,95 @@ function ResponsiveAppBar() {
                 <Typography variant="h1"></Typography>
             )}
 
+            {/* ===================ViewALlPOST================     */}
+
+            {/* {viewallPost ?(
+            post.map((singlePost,index)=>{
+                       return  <div key={index}>
+                            <h4>{singlePost.title}{singlePost.createdAt}</h4>
+                            <h3>{singlePost.userid}</h3>
+                            <h4>posted by:{postUsers[singlePost.userid]}</h4>
+                            <p>{singlePost.description}</p>
+                            <img src={singlePost.image} height={50} width={50} alt="" />
+                            <button onClick={() => handleDelete(singlePost.id)}>Delete</button>
+                            <br /> <br />
+                            <h3>Likes: {singlePost.likes?.length || 0}</h3>
+                            <br /> <br />
+                            <button onClick={() => handleLike(singlePost.id)}>like</button>
+
+                            <br /><br />
+                            <br /><br />
+
+                            <h3>Comment Section</h3>
+
+                            {singlePost.comments?.length > 0
+                                ?
+                                singlePost.comments.map((comment, index) => {
+                                    return <div key={index}>
+                                        <p>Posted by: {postUsers[comment.userid]} :- {comment.text} at : {timeAgo(comment.timestamp)}</p>
+                                    </div>
+                                })
+                                : <p>No Comments Found</p>
+                            }
+                            <input type="text" value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder='Type comments' />
+
+                            <button onClick={() => handleComment(singlePost.id)}>Add Comment</button>
+                            <hr />
+                            <hr />
+                        </div>
+                    })
+
+            )    : (
+            <h1></h1>
+            )} */}
+            {
+  viewallPost ? (
+    post.map((singlePost, index) => {
+      return (
+        <Card key={index} sx={{ marginBottom: 2,textAlign:'center',width:'50%',margin:'0 auto'}}>
+          <CardContent>
+            <Typography variant="h4">{singlePost.title} {singlePost.createdAt}</Typography>
+            <Typography variant="h6">{singlePost.userid}</Typography>
+            <Typography variant="subtitle1">posted by: {postUsers[singlePost.userid]}</Typography>
+            <Typography variant="body1">{singlePost.description}</Typography>
+            <Box component="img" src={singlePost.image} height={50} width={50} alt="" />
+            <CardActions sx={{textAlign:'center'}}>
+              <Button variant="contained" color="error" onClick={() => handleDelete(singlePost.id)}>Delete</Button>
+              <Button variant="contained" onClick={() => handleLike(singlePost.id)}>Like</Button>
+            </CardActions>
+            <Typography variant="h6">Likes: {singlePost.likes?.length || 0}</Typography>
+            <Divider sx={{ marginY: 2 }} />
+            <Typography variant="h5">Comment Section</Typography>
+            {singlePost.comments?.length > 0 ? (
+              singlePost.comments.map((comment, index) => {
+                return (
+                  <Box key={index} sx={{ marginBottom: 1 }}>
+                    <Typography variant="body2">
+                      Posted by: {postUsers[comment.userid]} :- {comment.text} at : {timeAgo(comment.timestamp)}
+                    </Typography>
+                  </Box>
+                );
+              })
+            ) : (
+              <Typography variant="body2">No Comments Found</Typography>
+            )}
+            <TextField
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder='Type comments'
+              variant="outlined"
+              fullWidth
+              sx={{ marginY: 2 }}
+            />
+            <Button variant="contained" onClick={() => handleComment(singlePost.id)}>Add Comment</Button>
+          </CardContent>
+        </Card>
+      );
+    })
+  ) : (
+    <Typography variant="h1"></Typography>
+  )
+}
 
 
         </div>
