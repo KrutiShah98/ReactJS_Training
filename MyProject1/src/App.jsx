@@ -5,16 +5,18 @@ import ProjectRouter from './PROJECT/MyFireBaseProject/AdminUserLogin/ProjectRou
 import Redux_Router from './11Redux/Redux_Router'
 import AllHooks from './Hooks/AllHooks'
 import Ex1 from './ReusableComponent/Ex1'
+import ApiFetch from './Practice/ApiFetch'
 
 export default function App() {
   return (
     <div>
      {/* <Router/> */}
-     {/* <ProjectRouter/> */}
+     <ProjectRouter/>
 
      {/* <Redux_Router/> */}
      {/* <AllHooks/> */}
-     <Ex1/>
+     {/* <ApiFetch/> */}
+     {/* <Ex1/> */}
     </div>
   )
 }

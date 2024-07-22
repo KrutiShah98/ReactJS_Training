@@ -14,8 +14,8 @@ import UseMemoex1 from './UseMemo/UseMemoex1'
 export default function AllHooks() {
   return (
     <div>
-        {/* <Hook3/> */}
-        {/* <Hook1/> */}
+        <Hook3/>
+        <Hook1/>
         {/* <UseRef1/> */}
         {/* <USeRef2/> */}
         {/* <Task1/> */}
@@ -26,7 +26,7 @@ export default function AllHooks() {
           <ThemeComponent2/>
         </ThemeComponent1> */}
         {/* <ParentComponent/> */}
-        <UseMemoex1/>
+        {/* <UseMemoex1/> */}
     </div>
   )
 }
